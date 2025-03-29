@@ -1,4 +1,4 @@
-// This fill will convert image files (.png .jpg ...) to eternal image format (.eimg) that stores the images as a list of pixels (and a header for dimensions)
+// This file will convert image files (.png .jpg ...) to eternal image format (.eimg) that stores the images as a list of pixels (and a header for dimensions)
 // Suported file types : png, jpg, tiff, gif, webp, ico, bmp
 extern crate image;
 use std::{fs, io::Read};
@@ -10,7 +10,7 @@ pub struct Image {
     pub h: u32,
 }
 impl Image {
-    fn to_bytes(&self) -> Vec<u8> {
+    pub fn to_file(&self, path: &str) {
         let mut bytes:Vec<u8> = Vec::with_capacity(8 + (self.h * self.w) as usize);
         // Add the header width then height both transformed into 4 u8
         bytes.push(((self.w >> 24) & 0xFF) as u8);
@@ -28,10 +28,7 @@ impl Image {
             bytes.push(*blue);
             bytes.push(*alpha);
         }
-        return bytes;
-    }
-    pub fn to_file(&self, path: &str) {
-        std::fs::write(path, self.to_bytes()).unwrap();
+        std::fs::write(path, bytes).unwrap();
     }
     pub fn from_file(path: &str) -> Image {
         let mut file = fs::File::open(path).unwrap();
@@ -54,104 +51,10 @@ impl Image {
     }
 
 
-    pub fn from_png(path: &str) -> Image {
-        // Png : rgba
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/4) {
-            pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_png(&self, path: &str) {
-        // Png : rgba
-        let mut img = image::ImageBuffer::new(self.w, self.h);
-        for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
-        }
-        img.save(path).unwrap();
-    }
-
-
-    pub fn from_jpg(path: &str) -> Image {
-        // Jpg : rgb
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/3) {
-            pixels.push((bytes[i*3], bytes[i*3+1], bytes[i*3+2], 255));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_jpg(&self, path: &str) {
-        // Jpg : rgb
-        let mut img = image::ImageBuffer::new(self.w, self.h);
-        for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgb([pixel.0, pixel.1, pixel.2]));
-        }
-        img.save(path).unwrap();
-    }
-
-
-    pub fn from_tiff(path: &str) -> Image {
-        // Tiff : rgba
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/4) {
-            pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_tiff(&self, path: &str) {
-        // Tiff : rgba
-        let mut img = image::ImageBuffer::new(self.w, self.h);
-        for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
-        }
-        img.save(path).unwrap();
-    }
-
-    
-    pub fn from_gif(path: &str) -> Image {
-        // Gif : rgba
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/4) {
-            pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_gif(&self, path: &str) {
-        // Gif : rgba
-        let mut img = image::ImageBuffer::new(self.w, self.h);
-        for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
-        }
-        img.save(path).unwrap();
-    }
-
-
-    pub fn from_webp(path: &str) -> Image {
-        // Webp : nobody knows
+    pub fn from(path: &str) -> Image {
         let img = image::open(path).unwrap().to_rgba8();
 
         let bytes: Vec<u8> = img.bytes().filter_map(Result::ok).collect();
-
         let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
         for i in 0..(bytes.len()/4) {
             pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
@@ -160,8 +63,7 @@ impl Image {
         return Image { p: pixels, w: img.width(), h: img.height() }
     }
 
-    pub fn to_webp(&self, path: &str) {
-        // Webp : nobody knows
+    pub fn to_rgba(&self, path: &str) {
         let mut img = image::ImageBuffer::new(self.w, self.h);
         for (i, pixel) in self.p.iter().enumerate() {
             img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
@@ -169,48 +71,10 @@ impl Image {
         img.save(path).unwrap();
     }
 
-
-    pub fn from_ico(path: &str) -> Image {
-        // Ico : rgba
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/4) {
-            pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_ico(&self, path: &str) {
-        // Ico : rgba
+    pub fn to_rgb(&self, path: &str) {
         let mut img = image::ImageBuffer::new(self.w, self.h);
         for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
-        }
-        img.save(path).unwrap();
-    }
-
-
-    pub fn from_bmp(path: &str) -> Image {
-        // Bmp : rgba
-        let img = image::open(path).unwrap();
-
-        let bytes = img.as_bytes();
-        let mut pixels: Vec<(u8,u8,u8,u8)> = Vec::with_capacity(bytes.len() / 4);
-        for i in 0..(bytes.len()/4) {
-            pixels.push((bytes[i*4], bytes[i*4+1], bytes[i*4+2], bytes[i*4+3]));
-        }
-
-        return Image { p: pixels, w: img.width(), h: img.height() }
-    }
-
-    pub fn to_bmp(&self, path: &str) {
-        // Bmp : rgba
-        let mut img = image::ImageBuffer::new(self.w, self.h);
-        for (i, pixel) in self.p.iter().enumerate() {
-            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgba([pixel.0, pixel.1, pixel.2, pixel.3]));
+            img.put_pixel((i % self.w as usize) as u32, (i / self.w as usize) as u32, image::Rgb([pixel.0, pixel.1, pixel.2]));
         }
         img.save(path).unwrap();
     }

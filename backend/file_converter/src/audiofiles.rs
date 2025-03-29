@@ -1,8 +1,11 @@
-// This fill will convert audio files (.mp3 .wav ...) to eternal image format (.eaud) that stores the audio as a list of samples (and a header for sample rate)
+// This file will convert audio files (.mp3 .wav ...) to eternal audio format (.eaud) that stores the audio as a list of samples (and a header for sample rate)
 // Suported file types : wav, mp3, ogg
 extern crate rodio;
+use core::panic;
+use std::io::BufReader;
 use std::{fs, io::Read};
 
+use std::fs::File;
 use rodio::Source;
 use hound::{WavSpec, WavWriter};
 
@@ -74,30 +77,50 @@ impl Audio {
 
 
     pub fn from_mp3(path: &str) -> Audio {
-        // Mp3 : i16
-        let file = fs::File::open(path).unwrap();
-        let source = rodio::Decoder::new_mp3(file).unwrap();
+        let file = File::open(path).unwrap();
+        let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
+        
         let sr = source.sample_rate() as u32; // Extract sample rate before consuming source
+        let channels = source.channels() as usize; // Get number of channels
+        
         let mut samples: Vec<i16> = Vec::new();
-        for sample in source.convert_samples::<i16>() {
-            samples.push(sample);
+        let all_samples: Vec<i16> = source.convert_samples::<i16>().collect();
+        
+        // Convert stereo to mono if needed
+        if channels == 2 {
+            for chunk in all_samples.chunks(2) {
+                let left = chunk[0];
+                let right = chunk.get(1).copied().unwrap_or(left); // Get next sample or use left if unavailable
+                samples.push((left / 2) + (right / 2)); // Average L + R
+            }
+        } else {
+            samples.extend(all_samples);
         }
+    
         Audio { s: samples, sr }
     }
 
     pub fn to_mp3(&self, path: &str) {
-        // Mp3 : i16
-        let spec = WavSpec {
-            channels: 1,
-            sample_rate: self.sr,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        };
-        let mut writer = WavWriter::create(path, spec).unwrap();
-        for sample in &self.s {
-            writer.write_sample(*sample).unwrap();
+        // Create wav file
+        self.to_wav(format!("_{}", path).as_str());
+        // Convert wav to mp3 (using ffmpeg)
+        // Use "ffmpeg.exe" on Windows, "ffmpeg" on Linux/macOS
+        let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+        let output = std::process::Command::new(ffmpeg_exe)
+            .arg("-i")
+            .arg(format!("_{}", path))
+            .arg("-codec:a")
+            .arg("libmp3lame")
+            .arg("-qscale:a")
+            .arg("2")
+            .arg(path)
+            .output()
+            .expect("Failed to execute ffmpeg");
+        if !output.status.success() {
+            panic!("Error: {}", String::from_utf8_lossy(&output.stderr));
+        } else {
+            println!("Converted {} to mp3", path);
         }
-        writer.finalize().unwrap();
     }
 
 
@@ -114,17 +137,22 @@ impl Audio {
     }
 
     pub fn to_ogg(&self, path: &str) {
-        // Ogg : i16
-        let spec = WavSpec {
-            channels: 1,
-            sample_rate: self.sr,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        };
-        let mut writer = WavWriter::create(path, spec).unwrap();
-        for sample in &self.s {
-            writer.write_sample(*sample).unwrap();
+        // Create wav file
+        self.to_wav(format!("_{}", path).as_str());
+        // Convert wav to ogg (using ffmpeg)
+        let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+        let output = std::process::Command::new(ffmpeg_exe)
+            .arg("-i")
+            .arg(format!("_{}", path))
+            .arg("-c:a")
+            .arg("libvorbis")
+            .arg(path)
+            .output()
+            .expect("Failed to execute ffmpeg");
+        if !output.status.success() {
+            panic!("Error: {}", String::from_utf8_lossy(&output.stderr));
+        } else {
+            println!("Converted {} to ogg", path);
         }
-        writer.finalize().unwrap();
     }
 }
