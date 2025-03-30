@@ -105,7 +105,7 @@ impl Audio {
         self.to_wav(format!("{}_", path).as_str());
         // Convert wav to mp3 (using ffmpeg)
         // Use "ffmpeg.exe" on Windows, "ffmpeg" on Linux/macOS
-        let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+        let ffmpeg_exe = if cfg!(target_os = "windows") { ".\\ffmpeg.exe" } else { "./ffmpeg" };
         let output = std::process::Command::new(ffmpeg_exe)
             .arg("-i")
             .arg(format!("{}_", path))
@@ -142,7 +142,7 @@ impl Audio {
         // Create wav file
         self.to_wav(format!("{}_", path).as_str());
         // Convert wav to ogg (using ffmpeg)
-        let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+        let ffmpeg_exe = if cfg!(target_os = "windows") { ".\\ffmpeg.exe" } else { "./ffmpeg" };
         let output = std::process::Command::new(ffmpeg_exe)
             .arg("-i")
             .arg(format!("{}_", path))

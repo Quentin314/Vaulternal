@@ -20,7 +20,7 @@ pub fn from(path: &str, save_path: &str, audio_path: &str) {
         std::fs::create_dir("frames").unwrap();
     }
 
-    let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+    let ffmpeg_exe = if cfg!(target_os = "windows") { ".\\ffmpeg.exe" } else { "./ffmpeg" };
 
     // Get fps
     let output = std::process::Command::new("ffmpeg")
@@ -151,7 +151,7 @@ pub fn to(path: &str, audio_path: &str, save_path: &str, codec: &str) {
     audio.to_wav(format!("{}.wav",audio_path).as_str());
 
     // Use ffmpeg to create a video from the frames
-    let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
+    let ffmpeg_exe = if cfg!(target_os = "windows") { ".\\ffmpeg.exe" } else { "./ffmpeg" };
     let output = std::process::Command::new(ffmpeg_exe)
         .args(["-framerate", &format!("{}", fps), "-i", "frames/frame_%04d.png", "-i", &format!("{}.wav", audio_path), "-c:v", codec, "-pix_fmt", "yuv420p", save_path])
         .output()
