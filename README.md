@@ -1,4 +1,4 @@
-#Vaulternal
+# Vaulternal
 # Project goal
 This project aims to make a simple, secure and everlasting format to store files.
 To achieve this, generic file types are converted to simple file types which assure the possibility of getting the data back even if the file format is long lost. After being packed into a single file, they are encrypted with RC4 which is a simple and fast symmetric-key encryption algorithm, which means that you only need the key and the right logic to access the encrypted files.
