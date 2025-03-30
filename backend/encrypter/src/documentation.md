@@ -11,15 +11,21 @@ Supported types (png, jpg, jpeg, tiff, ico, webp, bmp, gif) are transformed into
 #### 1.1.1 Header
 The first __8 bytes__ are used to store 2 unsigned integers both using 4 bytes which indicate the __width and height__ respectively.
 #### 1.1.2 Content
-The content is stored as a continuous list of 4 values, each as one byte : __Red, Green, Blue, Alpha__
+The content is stored as a continuous list of 4 unsigned values, each as one byte : __Red, Green, Blue, Alpha__
+These values are ordered from left to right, top to bottom.
 ### 1.2 Audio
 Supported types (wav, mp3, ogg) are transformed into a simple format structure :
 #### 1.2.1 Header
-
+The first __4 bytes__ are used to store 1 unsigned integers of 4 bytes which indictes the __sample rate__.
 #### 1.2.2 Content
-
-### Video
-Video files are ???
+The content is stored as a continuous list of __Samples__ as signed integers of 2 bytes.
+### 1.3 Video
+Supported types (mp4, avi, mov, mkv) are transformed into a simple format structure :
+#### 1.3.1 Header
+The first __16 bytes__ are used to store 4 unsigned integers of 4 bytes each which indicate the __width, height, frame count and fps__ respectively.
+#### 1.3.2 Content
+The content is stored as a continuous list of 4 unsigned values, each as one byte : __Red, Green, Blue, Alpha__
+These values are ordered from first frame to last frame, left to right, top to bottom.
 ### Other file formats
 For conversion into the capsule, unsupported file formats are taken as-is and an extension (.eall) is simply added at the end of the file name to mark it for packing.
 For conversion back to the original format, the .eall extension is just removed from the unpacked file.
