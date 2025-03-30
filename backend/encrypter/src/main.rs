@@ -8,7 +8,7 @@ fn main() {
     let key = args[2].as_bytes();
     if args[1] == "--encrypt" {
         // Create the output file, add the documentation, and encrypt the data chunk by chunk
-        let mut output_file = File::create("capsule.e").unwrap();
+        let mut output_file = File::create("capsule.eternal").unwrap();
         let documentation = std::fs::read("documentation.md").unwrap();
         output_file.write_all(&documentation).unwrap();
         output_file.write_all(&[0x00]).unwrap(); // Add a delimiter
@@ -31,21 +31,41 @@ fn main() {
             output_file.write_all(&encrypted_data).unwrap();
             read_lenght -= buffer.len() as i128;
         }
-        println!("File encrypted and saved as capsule.e");
+        println!("File encrypted and saved as capsule.eternal");
     }
     else if args[1] == "--decrypt" {
-        let mut data = std::fs::read("capsule.e").unwrap();
-        // Remove the documentation part, delimited by 0x00
-        for i in 0..data.len() {
-            if data[i] == 0x00 {
-                data = data[(i + 1)..].to_vec();
+        let encrypted_file = File::open("capsule.eternal").unwrap();
+        let mut decrypted_lenght:i128 = encrypted_file.metadata().unwrap().len() as i128;
+        let mut reader = BufReader::new(encrypted_file);
+        let mut output_file = File::create("packed.e").unwrap();
+        let mut buffer = Vec::new();
+        loop { // Skip the documentation
+            let mut byte = [0; 1];
+            if reader.read_exact(&mut byte).is_err() {
                 break;
             }
+            if byte[0] == 0x00 {
+                break;
+            }
+            buffer.push(byte[0]);
+            decrypted_lenght -= 1;
         }
-        let decrypted_data = rc4(key, &data);
-        let mut output_file = File::create("packed.e").unwrap();
-        output_file.write_all(&decrypted_data).unwrap();
-        println!("File decrypted and saved as unpacked.e");
+        // Read the encrypted file in chunks of 4096 bytes
+        loop {
+            let mut buffer = vec![0; 4096];
+            reader.read(&mut buffer).unwrap();
+            if decrypted_lenght < 4096 {
+                buffer = buffer[0..decrypted_lenght as usize-1].to_vec();
+                let decrypted_data = rc4(key, &buffer);
+                output_file.write_all(&decrypted_data).unwrap();
+                break;
+            }
+            let decrypted_data = rc4(key, &buffer);
+            output_file.write_all(&decrypted_data).unwrap();
+            decrypted_lenght -= buffer.len() as i128;
+        }
+        
+        println!("File decrypted and saved as packed.e");
     }
     else {
         println!("Usage: --encrypt/--decrypt <key>");
