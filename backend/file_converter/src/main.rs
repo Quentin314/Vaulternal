@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, path::Path};
 
 mod imagefiles;
 mod audiofiles;
@@ -24,6 +24,14 @@ fn main() {
         println!("File does not exist: {}", path);
         return;
     }
+    // Extract the file name
+    let file;
+    if let Some(file_name) = Path::new(path).file_name() {
+        file = file_name.to_string_lossy()
+    } else {
+        println!("Invalid path");
+        return;
+    }
     if args[1] == "--convert" {
         // Match the file extension
         let ext = std::path::Path::new(path).extension().unwrap().to_str().unwrap();
@@ -31,72 +39,72 @@ fn main() {
             "png" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "jpg" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "tiff" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "gif" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "webp" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "ico" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "bmp" => {
                 // Convert the image to the eternal format
                 let img = imagefiles::Image::from(path);
-                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, path).as_str());
+                img.to_file(format!("{}{}.eimg", OUTPUT_DIR, file).as_str());
             }
             "wav" => {
                 // Convert the audio to the eternal format
                 let audio = audiofiles::Audio::from_wav(path);
-                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "mp3" => {
                 // Convert the audio to the eternal format
                 let audio = audiofiles::Audio::from_mp3(path);
-                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "ogg" => {
                 // Convert the audio to the eternal format
                 let audio = audiofiles::Audio::from_ogg(path);
-                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                audio.to_file(format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "mp4" => {
                 // Convert the video to the eternal format
-                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, file).as_str(), format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "avi" => {
                 // Convert the video to the eternal format
-                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, file).as_str(), format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "mkv" => {
                 // Convert the video to the eternal format
-                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, file).as_str(), format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             "mov" => {
                 // Convert the video to the eternal format
-                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, file).as_str(), format!("{}{}.eaud", OUTPUT_DIR, file).as_str());
             }
             _ => {
                 // Copy the file to the output directory with .eall extension
-                let output_path = format!("{}{}.eall", OUTPUT_DIR, path);
+                let output_path = format!("{}{}.eall", OUTPUT_DIR, file);
                 std::fs::copy(path, &output_path).unwrap();
             }
         }
@@ -107,7 +115,8 @@ fn main() {
         match ext {
             "eimg" => {
                 // Match the second to last file extension
-                let original_ext = std::path::Path::new(path).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
+                let file_str = file.to_string();
+                let original_ext = std::path::Path::new(&file_str).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
                 let raw_name = original_ext[0..original_ext.len() - 1].join(".");
                 let original_ext = original_ext[original_ext.len() - 1];
                 // Convert the eternal image to the original format
@@ -121,7 +130,8 @@ fn main() {
             }
             "eaud" => {
                 // Match the second to last file extension
-                let original_ext = std::path::Path::new(path).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
+                let file_str = file.to_string();
+                let original_ext = std::path::Path::new(&file_str).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
                 let raw_name = original_ext[0..original_ext.len() - 1].join(".");
                 let original_ext = original_ext[original_ext.len() - 1];
                 // Convert the eternal audio to the original format
@@ -144,7 +154,8 @@ fn main() {
             }
             "evid" => {
                 // Match the second to last file extension
-                let original_ext = std::path::Path::new(path).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
+                let file_str = file.to_string();
+                let original_ext = std::path::Path::new(&file_str).file_stem().unwrap().to_str().unwrap().split(".").collect::<Vec<&str>>();
                 let raw_name = original_ext[0..original_ext.len() - 1].join(".");
                 let original_ext = original_ext[original_ext.len() - 1];
                 let codec = match original_ext {
@@ -158,11 +169,13 @@ fn main() {
                     }
                 };
                 // Convert the eternal video to the original format
-                videofiles::to(path, format!("{}.{}.eaud", raw_name, original_ext).as_str(), format!("{}{}.{}", OUTPUT_DIR, raw_name, original_ext).as_str(), codec);
+                // Get audio path (path - .evid + .eaud)
+                let audio_path = path.to_string().replace(".evid", ".eaud");
+                videofiles::to(path, &audio_path, format!("{}{}.{}", OUTPUT_DIR, raw_name, original_ext).as_str(), codec);
             }
             _ => {
                 // Copy the file to the output directory without .eall extension
-                let output_path = format!("{}{}", OUTPUT_DIR, path);
+                let output_path = format!("{}{}", OUTPUT_DIR, file);
                 // Remove the .eall extension
                 let splitted_path = output_path.split('.').collect::<Vec<&str>>();
                 let raw_name = splitted_path[0..splitted_path.len() - 1].join(".");

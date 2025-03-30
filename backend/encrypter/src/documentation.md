@@ -1,24 +1,29 @@
+This documentation is included as part of a capsule file to help understanding and opening it.
+
 # Project goal
 This project aims to make a simple, secure and everlasting format to store files.
-To achieve this, generic file types are converted to simple file types which assure the possibility of getting the data back even if left without the ??? . After being packed into a single file, they are encrypted with RC4 which is a simple and fast symmetric-key encryption algorithm, which means that you only need the key and the right logic to access the encrypted files.
+To achieve this, generic file types are converted to simple file types which assure the possibility of getting the data back even if the file format is long lost. After being packed into a single file, they are encrypted with RC4 which is a simple and fast symmetric-key encryption algorithm, which means that you only need the key and the right logic to access the encrypted files.
 
 # Structure
 ## 1. Conversion and File formats
-### 1.1 Text
-Text is store as a simple .txt, though renamed, which simply stores __each caracter as a byte__, corresponding to its utf-8 value.
-### 1.2 Images
+### 1.1 Images
 Supported types (png, jpg, jpeg, tiff, ico, webp, bmp, gif) are transformed into a simple format structure :
-#### 1.2.1 Header
-The first __16 bytes__ are used to store 2 unsigned integers both using 8 bytes which indicate the __width and height__ respectively.
-#### 1.2.2 Content
+#### 1.1.1 Header
+The first __8 bytes__ are used to store 2 unsigned integers both using 4 bytes which indicate the __width and height__ respectively.
+#### 1.1.2 Content
 The content is stored as a continuous list of 4 values, each as one byte : __Red, Green, Blue, Alpha__
-### Audio
-Audio files are ???
+### 1.2 Audio
+Supported types (wav, mp3, ogg) are transformed into a simple format structure :
+#### 1.2.1 Header
+
+#### 1.2.2 Content
+
 ### Video
 Video files are ???
 ### Other file formats
 For conversion into the capsule, unsupported file formats are taken as-is and an extension (.eall) is simply added at the end of the file name to mark it for packing.
 For conversion back to the original format, the .eall extension is just removed from the unpacked file.
+For example, this is the case for .txt files, which are simply stored as one byte per character.
 ## 2. Packing
 The packing works by making a file in two parts, a header to store information about the files, and the files' data.
 ### Header
