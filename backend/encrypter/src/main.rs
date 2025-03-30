@@ -10,7 +10,7 @@ fn main() {
         let data = std::fs::read("packed.e").unwrap();
         let encrypted_data = rc4(key, &data);
         let mut output_file = File::create("capsule.e").unwrap();
-        let documentation = std::fs::read("documentation.txt").unwrap();
+        let documentation = std::fs::read("documentation.md").unwrap();
         output_file.write_all(&documentation).unwrap();
         output_file.write_all(&[0x00]).unwrap(); // Add a delimiter
         output_file.write_all(&encrypted_data).unwrap();
