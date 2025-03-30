@@ -3,6 +3,7 @@
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
+use std::path::Path;
 
 #[derive(Debug)]
 struct FileInfo {
@@ -46,7 +47,15 @@ fn pack_files(file_names: Vec<String>) {
     // Get the header length
     let mut header_length = 1;
     for file in &files {
-        header_length += file.name.len() as u128 + 17;
+        // Extract the file name
+        let realfilename;
+        if let Some(file_name) = Path::new(&file.name).file_name() {
+            realfilename = file_name.to_string_lossy()
+        } else {
+            println!("Invalid path");
+            return;
+        }
+        header_length += realfilename.len() as u128 + 17;
     };
 
 
@@ -54,12 +63,20 @@ fn pack_files(file_names: Vec<String>) {
     let mut adress: u128 = header_length;
     let mut packed_file = std::fs::File::create("packed.e").unwrap();
     for file in &files {
+        // Extract the file name
+        let realfilename;
+        if let Some(file_name) = Path::new(&file.name).file_name() {
+            realfilename = file_name.to_string_lossy()
+        } else {
+            println!("Invalid path");
+            return;
+        }
         let mut adress_bytes: Vec<u8> = Vec::new();
         for i in (0..16).rev() {
             adress_bytes.push(((adress >> (i * 8)) & 0xFF) as u8);
         }
         packed_file.write_all(&mut adress_bytes).unwrap();
-        packed_file.write_all(&mut file.name.as_bytes().to_vec()).unwrap();
+        packed_file.write_all(&mut realfilename.as_bytes().to_vec()).unwrap();
         packed_file.write_all(&[b'|']).unwrap();
         adress += file.lenght;
     }
@@ -92,7 +109,7 @@ fn to_file_info(file_names: Vec<String>) -> Vec<FileInfo> {
         let file = std::fs::File::open(file_name.clone()).unwrap();
         files.push(FileInfo {
             lenght: file.metadata().unwrap().len() as u128,
-            name: file_name,
+            name: file_name.to_string(),
         });
     }
     return files;
@@ -149,6 +166,7 @@ fn unpack_files() {
                 break;
             }
         }
+        
         let mut file = File::create(format!("{}{}.{}", OUTPUT_PATH, file_name, file_extension)).unwrap();
         let mut buffer = vec![0; 4096];
         let mut read_lenght;
