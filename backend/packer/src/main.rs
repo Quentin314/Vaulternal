@@ -16,7 +16,14 @@ struct HeaderFile {
     name : Vec<u8>,
 }
 
+const OUTPUT_PATH: &str = "output/";
+
 fn main() {
+    // Create the output directory if it doesn't exist
+    if !std::path::Path::new(OUTPUT_PATH).exists() {
+        std::fs::create_dir(OUTPUT_PATH).unwrap();
+    }
+    // Get the command line arguments
     let args = env::args().collect::<Vec<String>>();
     if args.len() < 2 {
         println!("Usage: --pack/--unpack <file1> <file2> ...");
@@ -142,7 +149,7 @@ fn unpack_files() {
                 break;
             }
         }
-        let mut file = File::create(format!("{}unpacked.{}", file_name, file_extension)).unwrap();
+        let mut file = File::create(format!("{}{}.{}", OUTPUT_PATH, file_name, file_extension)).unwrap();
         let mut buffer = vec![0; 4096];
         let mut read_lenght;
         if i < files.len() - 1 {
