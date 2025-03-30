@@ -19,6 +19,10 @@ struct HeaderFile {
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
+    if args.len() < 3 {
+        println!("Usage: --pack/--unpack <file1> <file2> ...");
+        return;
+    }
     if args[1] == "--pack" {
         // Get the list of files from the command line arguments
         pack_files(args[2..].to_vec());
