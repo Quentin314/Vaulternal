@@ -1,6 +1,6 @@
 import pygame
 
-BORDER_SIZE = 2
+BORDER_SIZE = 0
 BORDER_COLOR = "#FFFFFF"
 
 class ScrollBox:
@@ -33,7 +33,7 @@ class ScrollBox:
             return
         
         pygame.draw.rect(screen, self.bg_color, pygame.Rect((self.x, self.y), (self.width, self.height)))
-        pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect((self.x, self.y), (self.width, self.height)), BORDER_SIZE)
+        #pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect((self.x, self.y), (self.width, self.height)), BORDER_SIZE)
 
         max_elem_count = (self.height - self.padding * 2) // self.elem_height
         last = min(len(self.files), self.first + max_elem_count - 1)
@@ -56,7 +56,7 @@ class ScrollBox:
 
             name = file.name
             i = len(name)
-            while self.font.size(name[:i])[0] >= self.width - self.elem_height:
+            while self.font.size(name[:i])[0] >= self.width - self.elem_height - 2*self.padding:
                 i -= 1
 
             text = self.font.render(name[:i], True, (0, 0, 0))
@@ -64,21 +64,19 @@ class ScrollBox:
             screen.blit(text, text_pos)
     
     def add_file(self, name, path):
-        if self.max_elems > -1 and len(self.files) < self.max_elems:
+        if len(self.files) < self.max_elems:
             return
         new_file = File(name, path)
         self.files.append(new_file)
         self.selected = len(self.files) - 1
-    
-    def clear_files(self):
-        self.files = []
 
     def click(self, mouse_pos):
         mx, my = mouse_pos
         if not (self.x < mx < self.x + self.width and self.y < my < self.y + self.height):
             return
         
-        elem = (my - self.y) // (self.elem_height + self.padding) + self.first
+        print("click", self.first, self.selected, self.files)
+        elem = int((my - self.y) // (self.elem_height + self.padding) + self.first)
 
         if elem < len(self.files) and mx > self.x + self.width - self.elem_height - self.padding:
             self.files.pop(elem)

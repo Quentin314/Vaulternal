@@ -1,1 +1,1 @@
-/home/tomg/code/Vaulternal/backend/encrypter/target/release/encrypter: /home/tomg/code/Vaulternal/backend/encrypter/src/main.rs
+C:\Users\flore\Documents\GitHub\Vaulternal\backend\encrypter\target\release\encrypter.exe: C:\Users\flore\Documents\GitHub\Vaulternal\backend\encrypter\src\main.rs

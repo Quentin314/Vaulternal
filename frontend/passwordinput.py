@@ -3,6 +3,7 @@ import pygame
 BG_COLOR = "#04080F"
 SELECTED_COLOR = "#14181F"
 TEXT_COLOR = "#FFFFFF"
+LABEL_COLOR = "#666666"
 
 class PasswordInput:
     def __init__(self, x, y, width, height):
@@ -34,8 +35,14 @@ class PasswordInput:
 
         if self.selected and frame//15 % 2:
             text += "_"
-        render_text = self.font.render(text, True, TEXT_COLOR)
-        screen.blit(render_text,  (self.x + self.padding + 2, self.y + self.padding))
+
+        color = TEXT_COLOR
+        if not self.selected and len(self.password) == 0:
+            text = "Password"
+            color = LABEL_COLOR
+
+        render_text = self.font.render(text, True, color)
+        screen.blit(render_text,  (self.x + self.padding + 2, self.y + self.padding + 3))
     
     def add_text(self, text):
         self.password += text
@@ -48,6 +55,4 @@ class PasswordInput:
 
     def click(self, mouse_pos):
         mx, my = mouse_pos
-        if not self.active or not (self.x < mx < self.x + self.width and self.y < my < self.y + self.height):
-            return
-        self.selected = True
+        self.selected = self.active and (self.x < mx < self.x + self.width and self.y < my < self.y + self.height)

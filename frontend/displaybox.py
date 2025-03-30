@@ -23,7 +23,7 @@ class FileInfo:
         self.active = active
         self.bg_color = BOX_BG_COLOR
         self.bd_color = BORDER_COLOR
-        self.font = pygame.font.Font("frontend/scpfont.ttf", 30)
+        self.font = pygame.font.Font("scpfont.ttf", 30)
         self.file_type = file_type
         self.file_name = file_name
     def draw(self, screen):
@@ -32,7 +32,7 @@ class FileInfo:
             pygame.draw.rect(screen,self.bd_color,(self.x, self.y, self.width, self.height), 2)
             pygame.draw.line(screen, self.bd_color, (self.x + self.width - self.width//8,self.y),(self.x+ self.width - self.width//8,self.height + 8), 2)
             file_name_text = self.font.render(self.file_name, True, TEXT_COLOR)
-            file_name_rect = file_name_text.get_rect(center=(self.x + 13*len(self.file_name)//2 + 15 ,self.y + self.height//2))
+            file_name_rect = file_name_text.get_rect(center=(self.x + (18*len(self.file_name))//2 + 15 ,self.y + self.height//2))
             screen.blit(file_name_text, file_name_rect)
             file_type_text = self.font.render(self.file_type, True, TEXT_COLOR)
             file_type_rect = file_type_text.get_rect(center=(self.x + self.width - self.width//8 + 13*len(self.file_type)//2 + 15 ,self.y + self.height//2))
@@ -52,7 +52,7 @@ class TextDisplayBox:
         self.scroll_y = 0
         self.scroll_speed = 20
         self.screen_size = ScreenSize
-        self.font = pygame.font.Font("frontend/scpfont.ttf", 22)
+        self.font = pygame.font.Font("scpfont.ttf", 22)
         self.BackG_COLOR = BG_Color
         self.data = text
         self.file_name = file_name
@@ -66,13 +66,10 @@ class TextDisplayBox:
         lines = []
         current_line = ''
         for word in words:
-            print("Current line: ", current_line)
             word = word.strip()
             if len(current_line + word)*13 <= width - 20:
-                print("Added word: ", word)
                 current_line += word + ' '
             elif len(word)*13 > width - 20:
-                print("Word too long: ", word)
                 too_long_word = word
                 for i in range(0, len(too_long_word)):
                     if 13*len(current_line + too_long_word[:i]) >= width - 20:
@@ -89,11 +86,9 @@ class TextDisplayBox:
                 current_line = too_long_word + ' '
 
             else :
-                print("Added Current line: ", current_line)
                 lines.append(current_line)
                 current_line = word + ' '
         lines.append(current_line)
-        print(lines)
         return lines
     def create_text_surface(self):
         self.lines = self.wrap_text(self.data, self.width - 20)
@@ -115,6 +110,9 @@ class TextDisplayBox:
             self.file_info.draw(screen)
 
     def handle_event(self, event):
+        mouse_pos = pygame.mouse.get_pos()
+        if not self.active or not (self.x < mouse_pos[0] < self.x + self.width and self.y < mouse_pos[1] < self.y + self.height):
+            return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 4 and self.scroll_y - self.scroll_speed >= 0:
             self.scroll_y -= self.scroll_speed
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 5 and self.scroll_y + self.scroll_speed <= self.text_surface.get_height() - self.height + 20:
@@ -130,12 +128,12 @@ class EmptyDisplayBox:
         self.bg_color = BOX_BG_COLOR
         self.bd_color = BORDER_COLOR
         self.active = active
-        self.font = pygame.font.Font("frontend/scpfont.ttf", 70)
+        self.font = pygame.font.Font("scpfont.ttf", 70)
         self.screen_size = ScreenSize
 
         self.file_name = file_name
         self.file_type = file_type
-        self.file_info = FileInfo(self.x , self.y - self.screen_size[1]//24, self.width, self.screen_size[1]//24, active = active,file_type = "No file selected",file_name ="/")
+        self.file_info = FileInfo(self.x , self.y - self.screen_size[1]//24, self.width, self.screen_size[1]//24, active = active,file_type = "/",file_name ="No file selected")
     def draw(self, screen):
         if self.active:
             self.file_info.draw(screen)
@@ -156,7 +154,7 @@ class NotSupportedBox:
         self.bg_color = BOX_BG_COLOR
         self.bd_color = BORDER_COLOR
         self.active = active
-        self.font = pygame.font.Font("frontend/scpfont.ttf", 70)
+        self.font = pygame.font.Font("scpfont.ttf", 40)
         self.file_type = file_type
         self.file_name = file_name
         self.screen_size = ScreenSize
@@ -166,7 +164,7 @@ class NotSupportedBox:
             self.file_info.draw(screen)
             pygame.draw.rect(screen, self.bg_color, (self.x + 2, self.y + 2, self.width - 4, self.height - 4))
             pygame.draw.rect(screen, self.bd_color, (self.x, self.y, self.width, self.height), 2)
-            text = self.font.render('FileType "'+self.file_type +'" Not Supported', True, (180, 180, 180))
+            text = self.font.render('FileType "'+self.file_type +'" Not Supported For Preview', True, (180, 180, 180))
             text_rect = text.get_rect(center=(self.x + self.width // 2, self.y + self.height // 2))
             screen.blit(text, text_rect)
     def handle_event(self, event):
@@ -180,7 +178,7 @@ class ImageDisplayBox:
         self.bg_color = BOX_BG_COLOR
         self.bd_color = BORDER_COLOR
         self.active = active
-        self.font = pygame.font.Font("frontend/scpfont.ttf", 70)
+        self.font = pygame.font.Font("scpfont.ttf", 70)
         self.image = pygame.image.load(image_path)
         self.img_ratio = self.image.get_width() / self.image.get_height()
         self.aspect_img_ration = (self.image.get_width()/(self.width -20), self.image.get_height()/(self.height - 20))
