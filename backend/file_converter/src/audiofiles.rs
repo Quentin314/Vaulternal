@@ -102,13 +102,13 @@ impl Audio {
 
     pub fn to_mp3(&self, path: &str) {
         // Create wav file
-        self.to_wav(format!("_{}", path).as_str());
+        self.to_wav(format!("{}_", path).as_str());
         // Convert wav to mp3 (using ffmpeg)
         // Use "ffmpeg.exe" on Windows, "ffmpeg" on Linux/macOS
         let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
         let output = std::process::Command::new(ffmpeg_exe)
             .arg("-i")
-            .arg(format!("_{}", path))
+            .arg(format!("{}_", path))
             .arg("-codec:a")
             .arg("libmp3lame")
             .arg("-qscale:a")
@@ -121,6 +121,8 @@ impl Audio {
         } else {
             println!("Converted {} to mp3", path);
         }
+        // Clean up the temporary wav file
+        std::fs::remove_file(format!("{}_", path)).unwrap();
     }
 
 
@@ -138,12 +140,12 @@ impl Audio {
 
     pub fn to_ogg(&self, path: &str) {
         // Create wav file
-        self.to_wav(format!("_{}", path).as_str());
+        self.to_wav(format!("{}_", path).as_str());
         // Convert wav to ogg (using ffmpeg)
         let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
         let output = std::process::Command::new(ffmpeg_exe)
             .arg("-i")
-            .arg(format!("_{}", path))
+            .arg(format!("{}_", path))
             .arg("-c:a")
             .arg("libvorbis")
             .arg(path)
@@ -154,5 +156,7 @@ impl Audio {
         } else {
             println!("Converted {} to ogg", path);
         }
+        // Clean up the temporary wav file
+        std::fs::remove_file(format!("{}_", path)).unwrap();
     }
 }
