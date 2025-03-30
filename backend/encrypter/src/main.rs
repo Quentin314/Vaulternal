@@ -2,7 +2,7 @@
 
 use std::env;
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::{prelude::*, BufReader};
 fn main() {
     let args = env::args().collect::<Vec<String>>();
     let key = args[2].as_bytes();
@@ -13,13 +13,24 @@ fn main() {
         output_file.write_all(&documentation).unwrap();
         output_file.write_all(&[0x00]).unwrap(); // Add a delimiter
         // Read the packed file and encrypt it
-        let mut packed_file = File::open("packed.e").unwrap();
-        for chunk in 0..packed_file.metadata().unwrap().len()/4096 {
-            let mut data = vec![0; 4096];
-            packed_file.read_exact(&mut data).unwrap();
-            let encrypted_data = rc4(key, &data);
+        let packed_file = File::open("packed.e").unwrap();
+        // Read the packed file in chunks of 4096 bytes
+        let mut read_lenght:i128 = packed_file.metadata().unwrap().len() as i128;
+        let mut reader = BufReader::new(packed_file);
+        loop {
+            println!("Read length: {}", read_lenght);
+            let mut buffer = vec![0; 4096];
+            reader.read(&mut buffer).unwrap();
+            if read_lenght < 4096 {
+                buffer = buffer[0..read_lenght as usize].to_vec().try_into().unwrap();
+                let encrypted_data = rc4(key, &buffer);
+                output_file.write_all(&encrypted_data).unwrap();
+                break;
+            }
+            let encrypted_data = rc4(key, &buffer);
             output_file.write_all(&encrypted_data).unwrap();
-        };
+            read_lenght -= buffer.len() as i128;
+        }
         println!("File encrypted and saved as capsule.e");
     }
     else if args[1] == "--decrypt" {

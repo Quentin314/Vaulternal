@@ -69,7 +69,6 @@ fn pack_files(file_names: Vec<String>) {
             reader.read(&mut buffer).unwrap();
             if read_lenght < 4096 {
                 buffer = buffer[0..read_lenght as usize].to_vec().try_into().unwrap();
-                println!("End of file");
                 packed_file.write_all(&buffer).unwrap();
                 break;
             }
