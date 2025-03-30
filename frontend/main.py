@@ -111,6 +111,7 @@ def add_file():
 def display_file(file):
     global Display_Box
     if file.split(".")[-1].lower() == "txt":
+        print("txt file")
         with open(file, "r", encoding="utf-16") as f:
             text = f.read().strip()
         Display_Box = DisplayBox(SCREEN_WIDTH//4, SCREEN_HEIGHT//20, SCREEN_WIDTH//1.5, 18*SCREEN_HEIGHT//20, type = "text",BG_Color=BG_COLOR,
@@ -253,6 +254,7 @@ if __name__ == "__main__":
                     mouse_pos = event.pos
                     update_buttons(mouse_pos, buttons, "mouseup")
                     result = scroll_box.click(mouse_pos)
+                    print(result)
                     if result == "deleted":
                         Display_Box = DisplayBox(SCREEN_WIDTH//4, SCREEN_HEIGHT//20, SCREEN_WIDTH//1.5, 18*SCREEN_HEIGHT//20, 
                               type = "empty",BG_Color=BG_COLOR,ScreenSize = (SCREEN_WIDTH, SCREEN_HEIGHT), data = None,active = True)
