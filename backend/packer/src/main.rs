@@ -8,7 +8,6 @@ use std::io::prelude::*;
 struct FileInfo {
     lenght : u128,
     name : String,
-    content : Vec<u8>,
 }
 
 #[derive(Debug)]
@@ -19,7 +18,7 @@ struct HeaderFile {
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
-    if args.len() < 3 {
+    if args.len() < 2 {
         println!("Usage: --pack/--unpack <file1> <file2> ...");
         return;
     }
@@ -46,37 +45,48 @@ fn pack_files(file_names: Vec<String>) {
 
     // Write the header with the file names and their adresses in the packed file
     let mut adress: u128 = header_length;
-    let mut packed_bytes: Vec<u8> = Vec::with_capacity(header_length as usize);
+    let mut packed_file = std::fs::File::create("packed.e").unwrap();
     for file in &files {
         let mut adress_bytes: Vec<u8> = Vec::new();
         for i in (0..16).rev() {
             adress_bytes.push(((adress >> (i * 8)) & 0xFF) as u8);
         }
-        packed_bytes.append(&mut adress_bytes);
-        packed_bytes.append(&mut file.name.as_bytes().to_vec());
-        packed_bytes.push(b'|');
+        packed_file.write_all(&mut adress_bytes).unwrap();
+        packed_file.write_all(&mut file.name.as_bytes().to_vec()).unwrap();
+        packed_file.write_all(&[b'|']).unwrap();
         adress += file.lenght;
     }
-    packed_bytes.push("|".as_bytes()[0]);
+    packed_file.write_all(&[b'|']).unwrap();
 
     // Write the files content
-    for file in &files {
-        packed_bytes.append(&mut file.content.clone());
+    for file_info in &files {
+        // Open the file buffer
+        let file = std::fs::File::open(file_info.name.clone()).unwrap();
+        let mut reader = std::io::BufReader::new(file);
+        let mut read_lenght = file_info.lenght;
+        loop {
+            let mut buffer = vec![0;4096];
+            reader.read(&mut buffer).unwrap();
+            if read_lenght < 4096 {
+                buffer = buffer[0..read_lenght as usize].to_vec().try_into().unwrap();
+                println!("End of file");
+                packed_file.write_all(&buffer).unwrap();
+                break;
+            }
+            packed_file.write_all(&buffer).unwrap();
+            read_lenght -= 4096;
+        }
     }
-    // Write the packed file
-    let mut packed_file = std::fs::File::create("packed.e").unwrap();
-    packed_file.write_all(packed_bytes.as_slice()).unwrap();
 }
 
 fn to_file_info(file_names: Vec<String>) -> Vec<FileInfo> {
     let mut files: Vec<FileInfo> = Vec::with_capacity(file_names.len());
     for file_name in file_names {
         // Open the file
-        let file:Vec<u8> = std::fs::read(file_name.clone()).unwrap();
+        let file = std::fs::File::open(file_name.clone()).unwrap();
         files.push(FileInfo {
-            lenght: file.len() as u128,
+            lenght: file.metadata().unwrap().len() as u128,
             name: file_name,
-            content: file,
         });
     }
     return files;
@@ -84,17 +94,21 @@ fn to_file_info(file_names: Vec<String>) -> Vec<FileInfo> {
 
 fn unpack_files() {
     // Read the packed file
-    let packed_file = std::fs::read("packed.e").unwrap();
-
+    let packed_file = std::fs::File::open("packed.e").unwrap();
+    let file_lenght = packed_file.metadata().unwrap().len() as u128;
+    let mut reader = std::io::BufReader::new(packed_file);
     // Get the header
     let mut header: Vec<u8> = Vec::new();
-    for i in 0..packed_file.len() {
-        if packed_file[i] == b'|' && packed_file[i + 1] == b'|' {
-            header.push(packed_file[i]);
-            header.push(packed_file[i + 1]);
+    let mut read_lenght = file_lenght.clone();
+    loop {
+        let mut buffer = Vec::new();
+        reader.read_until(b'|', &mut buffer).unwrap();
+        if buffer.len() <= 1 || read_lenght == 0 {
+            header.append(&mut buffer);
             break;
         }
-        header.push(packed_file[i]);
+        header.append(&mut buffer);
+        read_lenght -= buffer.len() as u128;
     }
     
     // Turn the header into a file list
@@ -120,11 +134,6 @@ fn unpack_files() {
     
     // Unpack the files
     for i in 0..files.len() {
-        let file_content: Vec<u8> = if i + 1 < files.len() {
-            packed_file[(files[i].adress as usize)..(files[i + 1].adress as usize)].to_vec()
-        } else {
-            packed_file[(files[i].adress as usize)..].to_vec()
-        };
         let mut file_name= String::new();
         let mut file_extension= String::new();
         for j in 0..files[i].name.len() {
@@ -135,7 +144,25 @@ fn unpack_files() {
             }
         }
         let mut file = File::create(format!("{}unpacked.{}", file_name, file_extension)).unwrap();
-        file.write_all(file_content.as_slice()).unwrap();
+        let mut buffer = vec![0; 4096];
+        let mut read_lenght;
+        if i < files.len() - 1 {
+            read_lenght = files[i+1].adress - files[i].adress;
+        }
+        else {
+            read_lenght = file_lenght - files[i].adress;
+        }
+        loop {
+            if read_lenght < 4096 {
+                buffer = vec![0; read_lenght as usize];
+                reader.read_exact(&mut buffer).unwrap();
+                file.write_all(&buffer).unwrap();
+                break;
+            }
+            reader.read_exact(&mut buffer).unwrap();
+            file.write_all(&buffer).unwrap();
+            read_lenght -= 4096;
+        }
     }
 
 }

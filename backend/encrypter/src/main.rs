@@ -7,13 +7,19 @@ fn main() {
     let args = env::args().collect::<Vec<String>>();
     let key = args[2].as_bytes();
     if args[1] == "--encrypt" {
-        let data = std::fs::read("packed.e").unwrap();
-        let encrypted_data = rc4(key, &data);
+        // Create the output file, add the documentation, and encrypt the data chunk by chunk
         let mut output_file = File::create("capsule.e").unwrap();
         let documentation = std::fs::read("documentation.md").unwrap();
         output_file.write_all(&documentation).unwrap();
         output_file.write_all(&[0x00]).unwrap(); // Add a delimiter
-        output_file.write_all(&encrypted_data).unwrap();
+        // Read the packed file and encrypt it
+        let mut packed_file = File::open("packed.e").unwrap();
+        for chunk in 0..packed_file.metadata().unwrap().len()/4096 {
+            let mut data = vec![0; 4096];
+            packed_file.read_exact(&mut data).unwrap();
+            let encrypted_data = rc4(key, &data);
+            output_file.write_all(&encrypted_data).unwrap();
+        };
         println!("File encrypted and saved as capsule.e");
     }
     else if args[1] == "--decrypt" {
