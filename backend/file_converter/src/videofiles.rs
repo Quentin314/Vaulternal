@@ -35,7 +35,12 @@ pub fn from(path: &str, save_path: &str, audio_path: &str) {
     let mut fps = 30; // Default FPS
     if let Some(captures) = fps_regex.captures(&stdout) {
         if let Some(fps_match) = captures.get(1) {
-            fps = fps_match.as_str().parse::<u32>().expect("Failed to parse FPS");
+            // Try parsing and use a fallback value if it fails
+            if let Ok(parsed_fps) = fps_match.as_str().parse::<u32>() {
+                fps = parsed_fps;
+            } else {
+                eprintln!("Failed to parse FPS, using default: {}", fps);
+            }
         }
     }
     println!("FPS: {}", fps);
