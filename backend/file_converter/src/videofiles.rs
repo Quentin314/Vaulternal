@@ -111,7 +111,7 @@ pub fn from(path: &str, save_path: &str, audio_path: &str) {
     fs::remove_dir_all("frames").unwrap();
 }
 
-pub fn to_mp4(path: &str, audio_path: &str, save_path: &str) {
+pub fn to(path: &str, audio_path: &str, save_path: &str, codec: &str) {
     // Create a "frames" directory if it doesn't exist
     if !std::path::Path::new("frames").exists() {
         std::fs::create_dir("frames").unwrap();
@@ -153,7 +153,7 @@ pub fn to_mp4(path: &str, audio_path: &str, save_path: &str) {
     // Use ffmpeg to create a video from the frames
     let ffmpeg_exe = if cfg!(target_os = "windows") { "ffmpeg.exe" } else { "./ffmpeg" };
     let output = std::process::Command::new(ffmpeg_exe)
-        .args(["-framerate", &format!("{}", fps), "-i", "frames/frame_%04d.png", "-i", &format!("{}.wav", audio_path), "-c:v", "libx264", "-pix_fmt", "yuv420p", save_path])
+        .args(["-framerate", &format!("{}", fps), "-i", "frames/frame_%04d.png", "-i", &format!("{}.wav", audio_path), "-c:v", codec, "-pix_fmt", "yuv420p", save_path])
         .output()
         .expect("Failed to execute ffmpeg");
     if !output.status.success() {

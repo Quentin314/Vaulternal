@@ -1,4 +1,4 @@
-use std::{env, os::linux::raw};
+use std::env;
 
 mod imagefiles;
 mod audiofiles;
@@ -15,7 +15,7 @@ fn main() {
     // Get the path to the video file
     let path = &args[2];
     // Check if the file exists
-    if !std::path::Path::new(path).exists() {
+    if !std::path::Path::new(&format!("{}{}", OUTPUT_DIR,path)).exists() {
         println!("File does not exist: {}", path);
         return;
     }
@@ -75,19 +75,19 @@ fn main() {
             }
             "mp4" => {
                 // Convert the video to the eternal format
-                let video = videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
             }
             "avi" => {
                 // Convert the video to the eternal format
-                let video = videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
             }
             "mkv" => {
                 // Convert the video to the eternal format
-                let video = videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
             }
             "mov" => {
                 // Convert the video to the eternal format
-                let video = videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
+                videofiles::from(path, format!("{}{}.evid", OUTPUT_DIR, path).as_str(), format!("{}{}.eaud", OUTPUT_DIR, path).as_str());
             }
             _ => {
                 // Copy the file to the output directory with .eall extension
@@ -142,8 +142,18 @@ fn main() {
                 let original_ext = std::path::Path::new(path).file_stem().unwrap().to_str().unwrap();
                 let raw_name = original_ext.split('.').collect::<Vec<&str>>()[0];
                 let original_ext = original_ext.split('.').collect::<Vec<&str>>()[1];
+                let codec = match original_ext {
+                    "mp4" => "libx264",
+                    "avi" => "libxvid",
+                    "mkv" => "libx264",
+                    "mov" => "libx264",
+                    _ => {
+                        println!("Unsupported video format: {}", original_ext);
+                        return;
+                    }
+                };
                 // Convert the eternal video to the original format
-                videofiles::to_mp4(&format!("{}{}", OUTPUT_DIR, path), format!("{}{}.{}.eaud", OUTPUT_DIR, raw_name, original_ext).as_str(), format!("{}{}.{}", OUTPUT_DIR, raw_name, original_ext).as_str());
+                videofiles::to(&format!("{}{}", OUTPUT_DIR, path), format!("{}{}.{}.eaud", OUTPUT_DIR, raw_name, original_ext).as_str(), format!("{}{}.{}", OUTPUT_DIR, raw_name, original_ext).as_str(), codec);
             }
             _ => {
                 // Copy the file to the output directory with .eall extension
